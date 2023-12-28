@@ -23,15 +23,22 @@ def home():
 def callback():
     # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
+
     # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    # handle webhook body
+
+    # handle webhook body in a new thread
+    threading.Thread(target=lambda: handle_webhook(body, signature)).start()
+
+    # immediately respond to prevent timeout
+    return 'OK'
+
+def handle_webhook(body, signature):
     try:
         line_handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
-    return 'OK'
 
 
 @line_handler.add(MessageEvent, message=TextMessage)
