@@ -36,24 +36,33 @@ def callback():
 
 def handle_webhook(body, signature):
     try:
+        # 使用 functools.partial 創建 handle_message 函數的包裝器
+        handler_func = functools.partial(handle_message, chatgpt=chatgpt, line_bot_api=line_bot_api)
+
+        # 將處理函數傳遞給 line_handler
+        line_handler.add(MessageEvent, message=TextMessage)(handler_func)
+        
+        # 處理 Webhook 請求
         line_handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
 
 
-@line_handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    global working_status
+#@line_handler.add(MessageEvent, message=TextMessage)
+def handle_message(event, chatgpt, line_bot_api):
     if event.message.type != "text":
         return
-        
+
     if event.message.text.lower().startswith("hi"):
-        chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
-        reply_msg = chatgpt.get_response().replace("AI:", "", 1)
-        chatgpt.add_msg(f"AI:{reply_msg}\n")
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply_msg))
+        threading.Thread(target=lambda: process_message(event, chatgpt, line_bot_api)).start()
+
+def process_message(event, chatgpt, line_bot_api):
+    chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
+    reply_msg = chatgpt.get_response().replace("AI:", "", 1)
+    chatgpt.add_msg(f"AI:{reply_msg}\n")
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_msg))
 
 
 if __name__ == "__main__":
