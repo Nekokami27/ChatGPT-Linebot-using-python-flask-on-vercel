@@ -17,9 +17,33 @@ chatgpt = ChatGPT()
 @app.route('/')
 def home():
     return 'Hello, World!'
-
+    
+def handle_event(event):
+    # 處理接收到的事件
+    if isinstance(event, MessageEvent):
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=event.message.text)
+        )
+        
 @app.route("/webhook", methods=['POST'])
 def callback():
+    # 從請求中獲取 X-Line-Signature 頭和請求主體
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+
+    # 使用多執行緒來處理事件
+    def handle():
+        try:
+            handler.handle(body, signature)
+        except InvalidSignatureError:
+            abort(400)
+    thread = threading.Thread(target=handle)
+    thread.start()
+
+    # 立即回應
+    return 'OK'
+    '''
     # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
     # get request body as text
@@ -31,6 +55,7 @@ def callback():
     except InvalidSignatureError:
         abort(400)
     return 'OK'
+  '''  
 
 
 @line_handler.add(MessageEvent, message=TextMessage)
@@ -45,8 +70,13 @@ def handle_message(event):
         chatgpt.add_msg(f"AI:{reply_msg}\n")
         line_bot_api.reply_message(
             event.reply_token,
+            TextSendMessage(text=event.message.text)
+        )
+        '''
+        line_bot_api.reply_message(
+            event.reply_token,
             TextSendMessage(text=reply_msg))
-    
+    '''
 """
     if event.message.text == "說話":
         working_status = True
