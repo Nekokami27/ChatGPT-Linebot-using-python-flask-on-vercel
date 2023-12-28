@@ -23,47 +23,34 @@ def home():
 def callback():
     # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
-
     # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-
-    # handle webhook body in a new thread
-    threading.Thread(target=lambda: handle_webhook(body, signature)).start()
-
-    # immediately respond to prevent timeout
-    return 'OK'
-
-def handle_webhook(body, signature):
+    # handle webhook body
     try:
-        # 使用 functools.partial 創建 handle_message 函數的包裝器
-        handler_func = functools.partial(handle_message, chatgpt=chatgpt, line_bot_api=line_bot_api)
-
-        # 將處理函數傳遞給 line_handler
-        line_handler.add(MessageEvent, message=TextMessage)(handler_func)
-        
-        # 處理 Webhook 請求
         line_handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
+    return 'OK'
 
 
-#@line_handler.add(MessageEvent, message=TextMessage)
-def handle_message(event, chatgpt, line_bot_api):
+@line_handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    global working_status
     if event.message.type != "text":
         return
-
+        
     if event.message.text.lower().startswith("hi"):
-        threading.Thread(target=lambda: process_message(event, chatgpt, line_bot_api)).start()
+        chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
+        reply_msg = chatgpt.get_response().replace("AI:", "", 1)
+        chatgpt.add_msg(f"AI:{reply_msg}\n")
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_msg))
 
-def process_message(event, chatgpt, line_bot_api):
-    chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
-    reply_msg = chatgpt.get_response().replace("AI:", "", 1)
-    chatgpt.add_msg(f"AI:{reply_msg}\n")
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_msg))
 
+if __name__ == "__main__":
+    app.run()
 
 if __name__ == "__main__":
     app.run()
