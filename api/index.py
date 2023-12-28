@@ -29,8 +29,7 @@ def callback():
         try:
             events = line_handler.parse(body, signature)
             for event in events:
-                if isinstance(event, MessageEvent):
-                    handle_message(event)
+                handle_message(event)
         except InvalidSignatureError:
             abort(400)
     threading.Thread(target=handle, args=(body, signature)).start()
@@ -48,7 +47,7 @@ def handle_message(event):
         chatgpt.add_msg(f"AI:{reply_msg}\n")
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=event.message.text)
+            TextSendMessage(text=reply_msg)
         )
 
 if __name__ == "__main__":
