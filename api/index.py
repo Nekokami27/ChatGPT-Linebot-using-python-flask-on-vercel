@@ -39,7 +39,7 @@ def handle_message(event):
     if event.message.type != "text":
         return
         
-    if event.message.text.startswith("Hi"):
+    if event.message.text.startswith('Hi'):
         chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
         reply_msg = chatgpt.get_response().replace("AI:", "", 1)
         chatgpt.add_msg(f"AI:{reply_msg}\n")
