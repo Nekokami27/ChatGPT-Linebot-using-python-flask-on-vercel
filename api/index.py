@@ -48,6 +48,8 @@ def handle_message(event):
             TextSendMessage(text=event.message.text)
         )
 
+if __name__ == "__main__":
+    app.run()
 """
     if event.message.text == "說話":
         working_status = True
@@ -72,5 +74,3 @@ def handle_message(event):
             TextSendMessage(text=reply_msg))
 """
 
-if __name__ == "__main__":
-    app.run()
