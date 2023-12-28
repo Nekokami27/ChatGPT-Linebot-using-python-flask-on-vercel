@@ -27,9 +27,8 @@ def callback():
     # 使用多執行緒來處理事件
     def handle(body, signature):
         try:
-            events = line_handler.parse(body, signature)
-            for event in events:
-                handle_message(event)
+            line_handler.handle_message(body, signature)
+            
         except InvalidSignatureError:
             abort(400)
     threading.Thread(target=handle, args=(body, signature)).start()
