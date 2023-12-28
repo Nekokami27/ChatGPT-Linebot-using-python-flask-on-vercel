@@ -27,10 +27,13 @@ def callback():
     # 使用多執行緒來處理事件
     def handle():
         try:
-            line_handler.handle(body, signature)
+            events = line_handler.parse(body, signature)
+            for event in events:
+                if isinstance(event, MessageEvent):
+                    handle_message(event)
         except InvalidSignatureError:
             abort(400)
-    threading.Thread(target=handle).start()
+    threading.Thread(target=handle, args=(body, signature)).start()
     return 'OK'
 
 @line_handler.add(MessageEvent, message=TextMessage)
