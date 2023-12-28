@@ -17,14 +17,6 @@ chatgpt = ChatGPT()
 @app.route('/')
 def home():
     return 'Hello, World!'
-    
-def handle_event(event):
-    # 處理接收到的事件
-    if isinstance(event, MessageEvent):
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=event.message.text)
-        )
         
 @app.route("/webhook", methods=['POST'])
 def callback():
@@ -35,7 +27,7 @@ def callback():
     # 使用多執行緒來處理事件
     def handle():
         try:
-            handler.handle(body, signature)
+            line_handler.handle(body, signature)
         except InvalidSignatureError:
             abort(400)
     thread = threading.Thread(target=handle)
