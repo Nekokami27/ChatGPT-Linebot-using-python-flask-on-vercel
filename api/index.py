@@ -25,7 +25,7 @@ def callback():
     body = request.get_data(as_text=True)
 
     # 使用多執行緒來處理事件
-    def handle():
+    def handle(body, signature):
         try:
             events = line_handler.parse(body, signature)
             for event in events:
