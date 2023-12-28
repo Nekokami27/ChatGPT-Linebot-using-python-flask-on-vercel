@@ -38,7 +38,16 @@ def handle_message(event):
     global working_status
     if event.message.type != "text":
         return
-
+        
+    if event.message.text.startswith("HI"):
+        chatgpt.add_msg(f"HUMAN:{event.message.text}?\n")
+        reply_msg = chatgpt.get_response().replace("AI:", "", 1)
+        chatgpt.add_msg(f"AI:{reply_msg}\n")
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_msg))
+    
+"""
     if event.message.text == "說話":
         working_status = True
         line_bot_api.reply_message(
@@ -60,7 +69,7 @@ def handle_message(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply_msg))
-
+"""
 
 if __name__ == "__main__":
     app.run()
